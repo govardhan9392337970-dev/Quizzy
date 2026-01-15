@@ -75,7 +75,6 @@ class HomeActivity : ComponentActivity() {
         var totalAttempts by remember { mutableStateOf(0) }
         var bestScore by remember { mutableStateOf(0) }
 
-        // Load user + stats
         LaunchedEffect(uid) {
             db.collection("users").document(uid).get()
                 .addOnSuccessListener { doc ->
@@ -93,17 +92,16 @@ class HomeActivity : ComponentActivity() {
                 }
         }
 
-        // ✅ Compact layout: smaller paddings + smaller fonts + smaller cards
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
                 .background(goldenGradient)
+                .statusBarsPadding()          // ✅ FIX: prevents content from sitting too high under status bar
                 .padding(horizontal = 12.dp),
-            contentPadding = PaddingValues(top = 8.dp, bottom = 12.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            contentPadding = PaddingValues(top = 4.dp, bottom = 10.dp), // ✅ smaller
+            verticalArrangement = Arrangement.spacedBy(6.dp)            // ✅ smaller
         ) {
 
-            // Header (compact)
             item {
                 Card(
                     modifier = Modifier.fillMaxWidth(),
@@ -113,14 +111,14 @@ class HomeActivity : ComponentActivity() {
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(10.dp),
+                            .padding(8.dp), // ✅ smaller
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Column(modifier = Modifier.weight(1f)) {
-                            Text("Welcome 👋", fontSize = 11.sp, color = Color(0xFF6D4C41))
+                            Text("Welcome 👋", fontSize = 10.sp, color = Color(0xFF6D4C41))
                             Text(
                                 text = name,
-                                fontSize = 16.sp,
+                                fontSize = 15.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = Color(0xFF3E2723),
                                 maxLines = 1,
@@ -128,12 +126,15 @@ class HomeActivity : ComponentActivity() {
                             )
                             Text(
                                 "Ready to test your CS skills?",
-                                fontSize = 11.sp,
+                                fontSize = 10.sp,
                                 color = Color(0xFF5D4037)
                             )
                         }
 
-                        IconButton(onClick = onLogout) {
+                        IconButton(
+                            onClick = onLogout,
+                            modifier = Modifier.size(40.dp) // ✅ slightly smaller touch area
+                        ) {
                             Icon(
                                 imageVector = Icons.Default.Logout,
                                 contentDescription = "Logout",
@@ -144,7 +145,6 @@ class HomeActivity : ComponentActivity() {
                 }
             }
 
-            // Stats row (compact)
             item {
                 Card(
                     modifier = Modifier.fillMaxWidth(),
@@ -154,7 +154,7 @@ class HomeActivity : ComponentActivity() {
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(vertical = 8.dp, horizontal = 12.dp),
+                            .padding(vertical = 6.dp, horizontal = 10.dp), // ✅ smaller
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         StatChip("Attempts", totalAttempts.toString())
@@ -167,10 +167,10 @@ class HomeActivity : ComponentActivity() {
             item {
                 Text(
                     text = "Quick Actions",
-                    fontSize = 14.sp,
+                    fontSize = 13.sp,
                     fontWeight = FontWeight.Bold,
                     color = Color(0xFF3E2723),
-                    modifier = Modifier.padding(start = 4.dp)
+                    modifier = Modifier.padding(start = 4.dp, top = 2.dp)
                 )
             }
 
@@ -207,9 +207,9 @@ class HomeActivity : ComponentActivity() {
             item {
                 Text(
                     text = "Tip: Try again to beat your best score ✨",
-                    fontSize = 12.sp,
+                    fontSize = 11.sp,
                     color = Color(0xFF5D4037),
-                    modifier = Modifier.padding(start = 4.dp)
+                    modifier = Modifier.padding(start = 4.dp, top = 2.dp)
                 )
             }
         }
@@ -218,10 +218,10 @@ class HomeActivity : ComponentActivity() {
     @Composable
     private fun StatChip(label: String, value: String) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(label, fontSize = 11.sp, color = Color(0xFF6D4C41))
+            Text(label, fontSize = 10.sp, color = Color(0xFF6D4C41))
             Text(
                 value,
-                fontSize = 14.sp,
+                fontSize = 13.sp,
                 fontWeight = FontWeight.Bold,
                 color = Color(0xFF3E2723)
             )
@@ -243,12 +243,12 @@ class HomeActivity : ComponentActivity() {
             shape = RoundedCornerShape(14.dp)
         ) {
             Row(
-                modifier = Modifier.padding(10.dp),
+                modifier = Modifier.padding(8.dp), // ✅ smaller
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Box(
                     modifier = Modifier
-                        .size(36.dp)
+                        .size(34.dp) // ✅ smaller
                         .clip(RoundedCornerShape(12.dp))
                         .background(Color(0xFFFFC107)),
                     contentAlignment = Alignment.Center
@@ -261,13 +261,13 @@ class HomeActivity : ComponentActivity() {
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
                         title,
-                        fontSize = 14.sp,
+                        fontSize = 13.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color(0xFF3E2723)
                     )
                     Text(
                         subtitle,
-                        fontSize = 11.sp,
+                        fontSize = 10.sp,
                         color = Color(0xFF5D4037)
                     )
                 }

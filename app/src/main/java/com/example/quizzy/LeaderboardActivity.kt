@@ -81,16 +81,17 @@ class LeaderboardActivity : ComponentActivity() {
                 }
         }
 
-        // ✅ Compact screen spacing
+        // ✅ Make it "low": add statusBarsPadding + reduce padding
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .background(goldenGradient)
-                .padding(horizontal = 12.dp, vertical = 8.dp)
+                .statusBarsPadding()
+                .padding(horizontal = 12.dp, vertical = 6.dp)
         ) {
             Column(modifier = Modifier.fillMaxSize()) {
 
-                // ✅ Compact header card
+                // ✅ More compact header (smaller padding + fonts)
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.92f)),
@@ -99,20 +100,20 @@ class LeaderboardActivity : ComponentActivity() {
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(10.dp),
+                            .padding(8.dp),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
                                 text = "Leaderboard 🏆",
-                                fontSize = 16.sp,
+                                fontSize = 15.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = Color(0xFF3E2723)
                             )
                             Text(
                                 text = "Top 20 quiz attempts",
-                                fontSize = 11.sp,
+                                fontSize = 10.sp,
                                 color = Color(0xFF5D4037)
                             )
                         }
@@ -120,14 +121,14 @@ class LeaderboardActivity : ComponentActivity() {
                         OutlinedButton(
                             onClick = onBack,
                             shape = RoundedCornerShape(12.dp),
-                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
+                            contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp)
                         ) {
-                            Text("Back", fontSize = 12.sp)
+                            Text("Back", fontSize = 11.sp)
                         }
                     }
                 }
 
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(6.dp))
 
                 when {
                     isLoading -> {
@@ -154,8 +155,8 @@ class LeaderboardActivity : ComponentActivity() {
                     else -> {
                         LazyColumn(
                             modifier = Modifier.fillMaxSize(),
-                            contentPadding = PaddingValues(bottom = 12.dp),
-                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                            contentPadding = PaddingValues(bottom = 10.dp),
+                            verticalArrangement = Arrangement.spacedBy(6.dp)
                         ) {
                             itemsIndexed(rows) { index, row ->
                                 LeaderboardItem(rank = index + 1, row = row)
@@ -177,21 +178,21 @@ class LeaderboardActivity : ComponentActivity() {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(10.dp),
+                    .padding(8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
 
                 // ✅ Smaller rank badge
                 Box(
                     modifier = Modifier
-                        .size(36.dp)
+                        .size(34.dp)
                         .clip(RoundedCornerShape(12.dp))
                         .background(Color(0xFFFFC107)),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
                         text = "#$rank",
-                        fontSize = 12.sp,
+                        fontSize = 11.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color(0xFF3E2723)
                     )
@@ -202,13 +203,13 @@ class LeaderboardActivity : ComponentActivity() {
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = "Score: ${row.score}/${row.total}",
-                        fontSize = 14.sp,
+                        fontSize = 13.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color(0xFF3E2723)
                     )
                     Text(
                         text = "User: ${shortUid(row.uid)}",
-                        fontSize = 11.sp,
+                        fontSize = 10.sp,
                         color = Color(0xFF5D4037),
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis

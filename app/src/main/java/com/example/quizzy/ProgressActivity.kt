@@ -79,8 +79,7 @@ class ProgressActivity : ComponentActivity() {
         var totalAttempts by remember { mutableStateOf(0) }
         var bestScore by remember { mutableStateOf(0) }
 
-        // ✅ FIX: remove orderBy from Firestore to avoid composite index requirement
-        // We fetch attempts by uid, then sort locally.
+        // ✅ No composite index: sort locally
         LaunchedEffect(uid) {
             db.collection("attempts")
                 .whereEqualTo("uid", uid)
@@ -88,7 +87,7 @@ class ProgressActivity : ComponentActivity() {
                 .get()
                 .addOnSuccessListener { qs ->
                     val list = qs.documents.mapNotNull { it.toObject(AttemptRow::class.java) }
-                        .sortedByDescending { it.createdAt } // ✅ local sort (no index needed)
+                        .sortedByDescending { it.createdAt }
 
                     rows = list
                     totalAttempts = rows.size
@@ -106,16 +105,19 @@ class ProgressActivity : ComponentActivity() {
             modifier = Modifier
                 .fillMaxSize()
                 .background(goldenGradient)
-                .padding(16.dp)
+                // ✅ Smaller outer padding + safe area
+                .padding(horizontal = 12.dp, vertical = 8.dp)
+                .statusBarsPadding()
         ) {
             Column(modifier = Modifier.fillMaxSize()) {
 
+                // ✅ Compact header card (smaller padding + fonts)
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.92f)),
-                    shape = RoundedCornerShape(16.dp)
+                    shape = RoundedCornerShape(14.dp)
                 ) {
-                    Column(modifier = Modifier.padding(14.dp)) {
+                    Column(modifier = Modifier.padding(10.dp)) {
 
                         Row(
                             modifier = Modifier.fillMaxWidth(),
@@ -125,39 +127,41 @@ class ProgressActivity : ComponentActivity() {
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(
                                     text = "My Progress 📈",
-                                    fontSize = 18.sp,
+                                    fontSize = 16.sp,
                                     fontWeight = FontWeight.Bold,
                                     color = Color(0xFF3E2723)
                                 )
                                 Text(
                                     text = "Your recent quiz attempts",
-                                    fontSize = 12.sp,
+                                    fontSize = 11.sp,
                                     color = Color(0xFF5D4037)
                                 )
                             }
 
                             OutlinedButton(
                                 onClick = onBack,
-                                shape = RoundedCornerShape(12.dp)
+                                shape = RoundedCornerShape(12.dp),
+                                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
                             ) {
-                                Text("Back")
+                                Text("Back", fontSize = 12.sp)
                             }
                         }
 
-                        Spacer(modifier = Modifier.height(10.dp))
+                        Spacer(modifier = Modifier.height(6.dp))
 
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             SummaryChip(label = "Attempts", value = totalAttempts.toString())
-                            SummaryChip(label = "Best Score", value = bestScore.toString())
+                            SummaryChip(label = "Best", value = bestScore.toString())
                             SummaryChip(label = "Mode", value = "CS")
                         }
                     }
                 }
 
-                Spacer(modifier = Modifier.height(12.dp))
+                // ✅ Smaller gap
+                Spacer(modifier = Modifier.height(8.dp))
 
                 when {
                     isLoading -> {
@@ -184,8 +188,8 @@ class ProgressActivity : ComponentActivity() {
                     else -> {
                         LazyColumn(
                             modifier = Modifier.fillMaxSize(),
-                            contentPadding = PaddingValues(bottom = 16.dp),
-                            verticalArrangement = Arrangement.spacedBy(10.dp)
+                            contentPadding = PaddingValues(bottom = 12.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
                             items(rows) { row ->
                                 AttemptItem(row)
@@ -199,9 +203,14 @@ class ProgressActivity : ComponentActivity() {
 
     @Composable
     private fun SummaryChip(label: String, value: String) {
-        Column {
-            Text(label, fontSize = 12.sp, color = Color(0xFF6D4C41))
-            Text(value, fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color(0xFF3E2723))
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Text(label, fontSize = 11.sp, color = Color(0xFF6D4C41))
+            Text(
+                value,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFF3E2723)
+            )
         }
     }
 
@@ -213,22 +222,21 @@ class ProgressActivity : ComponentActivity() {
         Card(
             modifier = Modifier.fillMaxWidth(),
             colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.92f)),
-            shape = RoundedCornerShape(16.dp)
+            shape = RoundedCornerShape(14.dp)
         ) {
-            Column(modifier = Modifier.padding(14.dp)) {
-
+            Column(modifier = Modifier.padding(10.dp)) { // ✅ smaller padding
                 Text(
                     text = "Score: ${row.score}/${row.total}  •  $percent%",
-                    fontSize = 15.sp,
+                    fontSize = 14.sp,
                     fontWeight = FontWeight.Bold,
                     color = Color(0xFF3E2723)
                 )
 
-                Spacer(modifier = Modifier.height(6.dp))
+                Spacer(modifier = Modifier.height(4.dp))
 
                 Text(
                     text = "Date: ${formatDateTime(row.createdAt)}",
-                    fontSize = 12.sp,
+                    fontSize = 11.sp,
                     color = Color(0xFF5D4037)
                 )
             }
