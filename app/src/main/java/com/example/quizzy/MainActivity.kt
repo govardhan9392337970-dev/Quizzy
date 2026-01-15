@@ -1,14 +1,15 @@
 package com.example.quizzy
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -18,28 +19,40 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.quizzy.ui.theme.QuizzyTheme
+import kotlinx.coroutines.delay
 
 class MainActivity : ComponentActivity() {
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
         setContent {
             QuizzyTheme {
-                SplashScreen()
+                SplashScreen(
+                    onFinish = {
+                        startActivity(Intent(this, LoginActivity::class.java))
+                        finish()
+                    }
+                )
             }
         }
     }
 }
 
 @Composable
-fun SplashScreen() {
+fun SplashScreen(onFinish: () -> Unit) {
 
-    // Yellow → Golden gradient
+    LaunchedEffect(Unit) {
+        delay(2000) // 2 seconds splash
+        onFinish()
+    }
+
     val goldenGradient = Brush.verticalGradient(
         colors = listOf(
             Color(0xFFFFD700), // Gold
             Color(0xFFFFE082), // Light Amber
-            Color(0xFFFFF8E1)  // Soft cream
+            Color(0xFFFFF8E1)  // Cream
         )
     )
 
@@ -55,18 +68,16 @@ fun SplashScreen() {
             modifier = Modifier.padding(24.dp)
         ) {
 
-            // App Title
             Text(
                 text = "Quizzy",
                 fontSize = 42.sp,
                 fontWeight = FontWeight.Bold,
-                color = Color(0xFF3E2723), // Dark brown for contrast
+                color = Color(0xFF3E2723),
                 textAlign = TextAlign.Center
             )
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Caption / Tagline
             Text(
                 text = "Test your Computer Science knowledge\nLearn • Compete • Improve",
                 fontSize = 16.sp,
