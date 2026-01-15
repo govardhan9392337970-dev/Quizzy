@@ -74,12 +74,24 @@ class HomeActivity : ComponentActivity() {
             )
         )
 
-        // Simple default values (no fancy state APIs)
         var name by remember { mutableStateOf("Quizzy User") }
         var totalAttempts by remember { mutableStateOf(0) }
         var bestScore by remember { mutableStateOf(0) }
 
-        // Fetch data (optional)
+        // ✅ Runs once when home loads: seeds Firestore questions if empty
+        LaunchedEffect(Unit) {
+            seedSampleQuestionsIfEmpty(
+                onSeeded = {
+                    Toast.makeText(context, "Sample questions added ✅", Toast.LENGTH_SHORT).show()
+                },
+                onError = {
+                    // Optional toast; keep silent if you want
+                    Toast.makeText(context, "Could not seed questions", Toast.LENGTH_SHORT).show()
+                }
+            )
+        }
+
+        // Load user + stats
         LaunchedEffect(uid) {
             db.collection("users").document(uid).get()
                 .addOnSuccessListener { doc ->
@@ -106,7 +118,6 @@ class HomeActivity : ComponentActivity() {
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
 
-            // ✅ Compact header (fixes "home page too high" feeling)
             item {
                 Card(
                     modifier = Modifier.fillMaxWidth(),
@@ -147,7 +158,6 @@ class HomeActivity : ComponentActivity() {
                 }
             }
 
-            // ✅ Small stats row (not tall)
             item {
                 Card(
                     modifier = Modifier.fillMaxWidth(),
@@ -183,8 +193,7 @@ class HomeActivity : ComponentActivity() {
                     subtitle = "Answer 5 CS questions",
                     icon = Icons.Default.PlayArrow
                 ) {
-                    Toast.makeText(context, "Quiz screen next ✅", Toast.LENGTH_SHORT).show()
-                    // startActivity(Intent(this@HomeActivity, QuizActivity::class.java))
+                    startActivity(Intent(this@HomeActivity, QuizActivity::class.java))
                 }
             }
 
@@ -194,8 +203,7 @@ class HomeActivity : ComponentActivity() {
                     subtitle = "Top scores (Firestore)",
                     icon = Icons.Default.Leaderboard
                 ) {
-                    Toast.makeText(context, "Leaderboard screen next ✅", Toast.LENGTH_SHORT).show()
-                    // startActivity(Intent(this@HomeActivity, LeaderboardActivity::class.java))
+                    startActivity(Intent(this@HomeActivity, LeaderboardActivity::class.java))
                 }
             }
 
@@ -205,8 +213,7 @@ class HomeActivity : ComponentActivity() {
                     subtitle = "Your recent attempts",
                     icon = Icons.Default.Timeline
                 ) {
-                    Toast.makeText(context, "Progress screen next ✅", Toast.LENGTH_SHORT).show()
-                    // startActivity(Intent(this@HomeActivity, ProgressActivity::class.java))
+                    startActivity(Intent(this@HomeActivity, ProgressActivity::class.java))
                 }
             }
 
@@ -219,6 +226,73 @@ class HomeActivity : ComponentActivity() {
                 )
             }
         }
+    }
+
+    // ✅ Seeds sample questions ONLY if Firestore "questions" collection is empty
+    private fun seedSampleQuestionsIfEmpty(
+        onSeeded: () -> Unit,
+        onError: () -> Unit
+    ) {
+        val questionsRef = db.collection("questions")
+
+        questionsRef.limit(1).get()
+            .addOnSuccessListener { qs ->
+                if (!qs.isEmpty) return@addOnSuccessListener // already has questions
+
+                val sample = listOf(
+                    mapOf(
+                        "question" to "What does OOP stand for?",
+                        "options" to listOf("Object Oriented Programming", "Open Office Protocol", "Order of Operations", "Optional Object Process"),
+                        "correctIndex" to 0
+                    ),
+                    mapOf(
+                        "question" to "Which data structure uses FIFO order?",
+                        "options" to listOf("Stack", "Queue", "Tree", "Graph"),
+                        "correctIndex" to 1
+                    ),
+                    mapOf(
+                        "question" to "Which keyword is used to define a function in Kotlin?",
+                        "options" to listOf("fun", "def", "function", "method"),
+                        "correctIndex" to 0
+                    ),
+                    mapOf(
+                        "question" to "What is the time complexity of Binary Search?",
+                        "options" to listOf("O(n)", "O(log n)", "O(n log n)", "O(1)"),
+                        "correctIndex" to 1
+                    ),
+                    mapOf(
+                        "question" to "Which SQL command is used to retrieve data?",
+                        "options" to listOf("INSERT", "SELECT", "UPDATE", "DELETE"),
+                        "correctIndex" to 1
+                    ),
+                    mapOf(
+                        "question" to "Which of these is NOT a programming language?",
+                        "options" to listOf("Python", "Java", "HTTP", "C++"),
+                        "correctIndex" to 2
+                    ),
+                    mapOf(
+                        "question" to "In databases, what does 'Primary Key' mean?",
+                        "options" to listOf("A key used for encryption", "Unique identifier for each row", "A foreign table link", "A duplicate column"),
+                        "correctIndex" to 1
+                    ),
+                    mapOf(
+                        "question" to "Which network protocol is used for secure web browsing?",
+                        "options" to listOf("HTTP", "FTP", "HTTPS", "SMTP"),
+                        "correctIndex" to 2
+                    )
+                )
+
+                val batch = db.batch()
+                sample.forEach { q ->
+                    val doc = questionsRef.document() // auto-id
+                    batch.set(doc, q)
+                }
+
+                batch.commit()
+                    .addOnSuccessListener { onSeeded() }
+                    .addOnFailureListener { onError() }
+            }
+            .addOnFailureListener { onError() }
     }
 
     @Composable
