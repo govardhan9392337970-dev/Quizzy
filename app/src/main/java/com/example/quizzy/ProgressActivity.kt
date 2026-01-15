@@ -22,7 +22,6 @@ import androidx.compose.ui.unit.sp
 import com.example.quizzy.ui.theme.QuizzyTheme
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.Query
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -77,19 +76,21 @@ class ProgressActivity : ComponentActivity() {
         var rows by remember { mutableStateOf<List<AttemptRow>>(emptyList()) }
         var errorMsg by remember { mutableStateOf<String?>(null) }
 
-        // summary values
         var totalAttempts by remember { mutableStateOf(0) }
         var bestScore by remember { mutableStateOf(0) }
 
+        // ✅ FIX: remove orderBy from Firestore to avoid composite index requirement
+        // We fetch attempts by uid, then sort locally.
         LaunchedEffect(uid) {
             db.collection("attempts")
                 .whereEqualTo("uid", uid)
-                .orderBy("createdAt", Query.Direction.DESCENDING)
                 .limit(50)
                 .get()
                 .addOnSuccessListener { qs ->
-                    rows = qs.documents.mapNotNull { it.toObject(AttemptRow::class.java) }
+                    val list = qs.documents.mapNotNull { it.toObject(AttemptRow::class.java) }
+                        .sortedByDescending { it.createdAt } // ✅ local sort (no index needed)
 
+                    rows = list
                     totalAttempts = rows.size
                     bestScore = rows.maxOfOrNull { it.score.toInt() } ?: 0
 
@@ -109,7 +110,6 @@ class ProgressActivity : ComponentActivity() {
         ) {
             Column(modifier = Modifier.fillMaxSize()) {
 
-                // Header card
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.92f)),
@@ -146,7 +146,6 @@ class ProgressActivity : ComponentActivity() {
 
                         Spacer(modifier = Modifier.height(10.dp))
 
-                        // Summary row (simple)
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween

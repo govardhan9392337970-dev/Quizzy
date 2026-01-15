@@ -2,19 +2,18 @@ package com.example.quizzy
 
 import android.content.Intent
 import android.os.Bundle
-import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
@@ -23,6 +22,7 @@ import androidx.compose.ui.unit.sp
 import com.example.quizzy.ui.theme.QuizzyTheme
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import kotlin.math.min
 
 data class QuizQuestion(
     val question: String = "",
@@ -69,13 +69,14 @@ class QuizActivity : ComponentActivity() {
         var score by remember { mutableStateOf(0) }
         var isLoading by remember { mutableStateOf(true) }
 
-        // Load questions from Firestore
+        // Load questions from Firestore (simple)
         LaunchedEffect(Unit) {
             db.collection("questions")
-                .limit(5)
                 .get()
                 .addOnSuccessListener { qs ->
-                    questions = qs.documents.mapNotNull { it.toObject(QuizQuestion::class.java) }
+                    val all = qs.documents.mapNotNull { it.toObject(QuizQuestion::class.java) }
+                    // ✅ take up to 5; shuffle so it feels random without complex Firestore queries
+                    questions = all.shuffled().take(min(5, all.size))
                     isLoading = false
                 }
                 .addOnFailureListener {
@@ -87,7 +88,7 @@ class QuizActivity : ComponentActivity() {
             modifier = Modifier
                 .fillMaxSize()
                 .background(goldenGradient)
-                .padding(16.dp)
+                .padding(horizontal = 12.dp, vertical = 8.dp) // ✅ smaller padding
         ) {
 
             if (isLoading) {
@@ -106,57 +107,68 @@ class QuizActivity : ComponentActivity() {
 
             val q = questions[currentIndex]
 
-            Column(
-                modifier = Modifier.fillMaxSize(),
-                verticalArrangement = Arrangement.SpaceBetween
-            ) {
+            // ✅ Use LazyColumn so the screen never feels “too high” / overflowing
+            Column(modifier = Modifier.fillMaxSize()) {
 
-                Column {
-                    Text(
-                        text = "Question ${currentIndex + 1} of ${questions.size}",
-                        fontSize = 14.sp,
-                        color = Color(0xFF5D4037)
-                    )
+                // Compact header
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.92f)),
+                    shape = RoundedCornerShape(14.dp)
+                ) {
+                    Column(modifier = Modifier.padding(10.dp)) {
+                        Text(
+                            text = "Question ${currentIndex + 1} of ${questions.size}",
+                            fontSize = 11.sp,
+                            color = Color(0xFF5D4037)
+                        )
+                        Spacer(modifier = Modifier.height(6.dp))
+                        Text(
+                            text = q.question,
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFF3E2723)
+                        )
+                    }
+                }
 
-                    Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(8.dp))
 
-                    Text(
-                        text = q.question,
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color(0xFF3E2723)
-                    )
+                // Options list (scrollable)
+                LazyColumn(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    contentPadding = PaddingValues(bottom = 10.dp)
+                ) {
+                    items(q.options.size) { index ->
+                        val option = q.options[index]
 
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    q.options.forEachIndexed { index, option ->
                         Card(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(vertical = 6.dp)
                                 .clickable { selectedOption = index },
                             colors = CardDefaults.cardColors(
                                 containerColor = if (selectedOption == index)
                                     Color(0xFFFFC107)
                                 else
-                                    Color.White
+                                    Color.White.copy(alpha = 0.92f)
                             ),
                             shape = RoundedCornerShape(14.dp)
                         ) {
                             Text(
                                 text = option,
-                                modifier = Modifier.padding(14.dp),
+                                modifier = Modifier.padding(12.dp), // ✅ smaller padding
+                                fontSize = 13.sp,
                                 color = Color(0xFF3E2723)
                             )
                         }
                     }
                 }
 
+                // Compact button
                 Button(
                     onClick = {
-                        if (selectedOption == q.correctIndex) {
-                            score++
-                        }
+                        if (selectedOption == q.correctIndex) score++
 
                         if (currentIndex == questions.lastIndex) {
                             onFinish(score, questions.size)
@@ -168,8 +180,8 @@ class QuizActivity : ComponentActivity() {
                     enabled = selectedOption != -1,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(52.dp),
-                    shape = RoundedCornerShape(16.dp),
+                        .height(48.dp), // ✅ smaller height
+                    shape = RoundedCornerShape(14.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Color(0xFFFFC107),
                         contentColor = Color(0xFF3E2723)
@@ -177,7 +189,8 @@ class QuizActivity : ComponentActivity() {
                 ) {
                     Text(
                         text = if (currentIndex == questions.lastIndex) "Finish Quiz" else "Next",
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 14.sp
                     )
                 }
             }

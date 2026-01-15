@@ -2,7 +2,6 @@ package com.example.quizzy
 
 import android.content.Intent
 import android.os.Bundle
-import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -24,7 +23,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -64,7 +62,6 @@ class HomeActivity : ComponentActivity() {
 
     @Composable
     private fun HomeScreen(uid: String, onLogout: () -> Unit) {
-        val context = LocalContext.current
 
         val goldenGradient = Brush.verticalGradient(
             colors = listOf(
@@ -77,19 +74,6 @@ class HomeActivity : ComponentActivity() {
         var name by remember { mutableStateOf("Quizzy User") }
         var totalAttempts by remember { mutableStateOf(0) }
         var bestScore by remember { mutableStateOf(0) }
-
-        // ✅ Runs once when home loads: seeds Firestore questions if empty
-        LaunchedEffect(Unit) {
-            seedSampleQuestionsIfEmpty(
-                onSeeded = {
-                    Toast.makeText(context, "Sample questions added ✅", Toast.LENGTH_SHORT).show()
-                },
-                onError = {
-                    // Optional toast; keep silent if you want
-                    Toast.makeText(context, "Could not seed questions", Toast.LENGTH_SHORT).show()
-                }
-            )
-        }
 
         // Load user + stats
         LaunchedEffect(uid) {
@@ -109,32 +93,34 @@ class HomeActivity : ComponentActivity() {
                 }
         }
 
+        // ✅ Compact layout: smaller paddings + smaller fonts + smaller cards
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
                 .background(goldenGradient)
-                .padding(horizontal = 14.dp),
-            contentPadding = PaddingValues(top = 14.dp, bottom = 18.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+                .padding(horizontal = 12.dp),
+            contentPadding = PaddingValues(top = 8.dp, bottom = 12.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
 
+            // Header (compact)
             item {
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.92f)),
-                    shape = RoundedCornerShape(16.dp)
+                    shape = RoundedCornerShape(14.dp)
                 ) {
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(14.dp),
+                            .padding(10.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Column(modifier = Modifier.weight(1f)) {
-                            Text("Welcome 👋", fontSize = 12.sp, color = Color(0xFF6D4C41))
+                            Text("Welcome 👋", fontSize = 11.sp, color = Color(0xFF6D4C41))
                             Text(
                                 text = name,
-                                fontSize = 18.sp,
+                                fontSize = 16.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = Color(0xFF3E2723),
                                 maxLines = 1,
@@ -142,7 +128,7 @@ class HomeActivity : ComponentActivity() {
                             )
                             Text(
                                 "Ready to test your CS skills?",
-                                fontSize = 12.sp,
+                                fontSize = 11.sp,
                                 color = Color(0xFF5D4037)
                             )
                         }
@@ -158,16 +144,17 @@ class HomeActivity : ComponentActivity() {
                 }
             }
 
+            // Stats row (compact)
             item {
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.92f)),
-                    shape = RoundedCornerShape(16.dp)
+                    shape = RoundedCornerShape(14.dp)
                 ) {
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(14.dp),
+                            .padding(vertical = 8.dp, horizontal = 12.dp),
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         StatChip("Attempts", totalAttempts.toString())
@@ -180,17 +167,17 @@ class HomeActivity : ComponentActivity() {
             item {
                 Text(
                     text = "Quick Actions",
-                    fontSize = 15.sp,
+                    fontSize = 14.sp,
                     fontWeight = FontWeight.Bold,
                     color = Color(0xFF3E2723),
-                    modifier = Modifier.padding(start = 4.dp, top = 2.dp)
+                    modifier = Modifier.padding(start = 4.dp)
                 )
             }
 
             item {
                 SimpleActionCard(
                     title = "Start Quiz",
-                    subtitle = "Answer 5 CS questions",
+                    subtitle = "5 CS questions",
                     icon = Icons.Default.PlayArrow
                 ) {
                     startActivity(Intent(this@HomeActivity, QuizActivity::class.java))
@@ -200,7 +187,7 @@ class HomeActivity : ComponentActivity() {
             item {
                 SimpleActionCard(
                     title = "Leaderboard",
-                    subtitle = "Top scores (Firestore)",
+                    subtitle = "Top scores",
                     icon = Icons.Default.Leaderboard
                 ) {
                     startActivity(Intent(this@HomeActivity, LeaderboardActivity::class.java))
@@ -210,7 +197,7 @@ class HomeActivity : ComponentActivity() {
             item {
                 SimpleActionCard(
                     title = "My Progress",
-                    subtitle = "Your recent attempts",
+                    subtitle = "Quiz history",
                     icon = Icons.Default.Timeline
                 ) {
                     startActivity(Intent(this@HomeActivity, ProgressActivity::class.java))
@@ -220,86 +207,24 @@ class HomeActivity : ComponentActivity() {
             item {
                 Text(
                     text = "Tip: Try again to beat your best score ✨",
-                    fontSize = 13.sp,
+                    fontSize = 12.sp,
                     color = Color(0xFF5D4037),
-                    modifier = Modifier.padding(start = 4.dp, top = 4.dp)
+                    modifier = Modifier.padding(start = 4.dp)
                 )
             }
         }
     }
 
-    // ✅ Seeds sample questions ONLY if Firestore "questions" collection is empty
-    private fun seedSampleQuestionsIfEmpty(
-        onSeeded: () -> Unit,
-        onError: () -> Unit
-    ) {
-        val questionsRef = db.collection("questions")
-
-        questionsRef.limit(1).get()
-            .addOnSuccessListener { qs ->
-                if (!qs.isEmpty) return@addOnSuccessListener // already has questions
-
-                val sample = listOf(
-                    mapOf(
-                        "question" to "What does OOP stand for?",
-                        "options" to listOf("Object Oriented Programming", "Open Office Protocol", "Order of Operations", "Optional Object Process"),
-                        "correctIndex" to 0
-                    ),
-                    mapOf(
-                        "question" to "Which data structure uses FIFO order?",
-                        "options" to listOf("Stack", "Queue", "Tree", "Graph"),
-                        "correctIndex" to 1
-                    ),
-                    mapOf(
-                        "question" to "Which keyword is used to define a function in Kotlin?",
-                        "options" to listOf("fun", "def", "function", "method"),
-                        "correctIndex" to 0
-                    ),
-                    mapOf(
-                        "question" to "What is the time complexity of Binary Search?",
-                        "options" to listOf("O(n)", "O(log n)", "O(n log n)", "O(1)"),
-                        "correctIndex" to 1
-                    ),
-                    mapOf(
-                        "question" to "Which SQL command is used to retrieve data?",
-                        "options" to listOf("INSERT", "SELECT", "UPDATE", "DELETE"),
-                        "correctIndex" to 1
-                    ),
-                    mapOf(
-                        "question" to "Which of these is NOT a programming language?",
-                        "options" to listOf("Python", "Java", "HTTP", "C++"),
-                        "correctIndex" to 2
-                    ),
-                    mapOf(
-                        "question" to "In databases, what does 'Primary Key' mean?",
-                        "options" to listOf("A key used for encryption", "Unique identifier for each row", "A foreign table link", "A duplicate column"),
-                        "correctIndex" to 1
-                    ),
-                    mapOf(
-                        "question" to "Which network protocol is used for secure web browsing?",
-                        "options" to listOf("HTTP", "FTP", "HTTPS", "SMTP"),
-                        "correctIndex" to 2
-                    )
-                )
-
-                val batch = db.batch()
-                sample.forEach { q ->
-                    val doc = questionsRef.document() // auto-id
-                    batch.set(doc, q)
-                }
-
-                batch.commit()
-                    .addOnSuccessListener { onSeeded() }
-                    .addOnFailureListener { onError() }
-            }
-            .addOnFailureListener { onError() }
-    }
-
     @Composable
     private fun StatChip(label: String, value: String) {
-        Column {
-            Text(label, fontSize = 12.sp, color = Color(0xFF6D4C41))
-            Text(value, fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color(0xFF3E2723))
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Text(label, fontSize = 11.sp, color = Color(0xFF6D4C41))
+            Text(
+                value,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFF3E2723)
+            )
         }
     }
 
@@ -315,27 +240,36 @@ class HomeActivity : ComponentActivity() {
                 .fillMaxWidth()
                 .clickable { onClick() },
             colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.92f)),
-            shape = RoundedCornerShape(16.dp)
+            shape = RoundedCornerShape(14.dp)
         ) {
             Row(
-                modifier = Modifier.padding(14.dp),
+                modifier = Modifier.padding(10.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Box(
                     modifier = Modifier
-                        .size(42.dp)
-                        .clip(RoundedCornerShape(14.dp))
+                        .size(36.dp)
+                        .clip(RoundedCornerShape(12.dp))
                         .background(Color(0xFFFFC107)),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(icon, contentDescription = title, tint = Color(0xFF3E2723))
                 }
 
-                Spacer(modifier = Modifier.width(12.dp))
+                Spacer(modifier = Modifier.width(10.dp))
 
                 Column(modifier = Modifier.weight(1f)) {
-                    Text(title, fontSize = 15.sp, fontWeight = FontWeight.Bold, color = Color(0xFF3E2723))
-                    Text(subtitle, fontSize = 12.sp, color = Color(0xFF5D4037))
+                    Text(
+                        title,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF3E2723)
+                    )
+                    Text(
+                        subtitle,
+                        fontSize = 11.sp,
+                        color = Color(0xFF5D4037)
+                    )
                 }
             }
         }
