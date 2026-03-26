@@ -105,13 +105,13 @@ class ProgressActivity : ComponentActivity() {
             modifier = Modifier
                 .fillMaxSize()
                 .background(goldenGradient)
-                // ✅ Smaller outer padding + safe area
+                //  Smaller outer padding + safe area
                 .padding(horizontal = 12.dp, vertical = 8.dp)
                 .statusBarsPadding()
         ) {
             Column(modifier = Modifier.fillMaxSize()) {
 
-                // ✅ Compact header card (smaller padding + fonts)
+                //  Compact header card (smaller padding + fonts)
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.92f)),

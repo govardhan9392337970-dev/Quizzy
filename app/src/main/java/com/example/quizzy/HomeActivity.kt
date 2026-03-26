@@ -96,7 +96,7 @@ class HomeActivity : ComponentActivity() {
             modifier = Modifier
                 .fillMaxSize()
                 .background(goldenGradient)
-                .statusBarsPadding()          // ✅ FIX: prevents content from sitting too high under status bar
+                .statusBarsPadding()          //  FIX: prevents content from sitting too high under status bar
                 .padding(horizontal = 12.dp),
             contentPadding = PaddingValues(top = 4.dp, bottom = 10.dp), // ✅ smaller
             verticalArrangement = Arrangement.spacedBy(6.dp)            // ✅ smaller
@@ -111,11 +111,11 @@ class HomeActivity : ComponentActivity() {
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(8.dp), // ✅ smaller
+                            .padding(8.dp), //  smaller
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Column(modifier = Modifier.weight(1f)) {
-                            Text("Welcome 👋", fontSize = 10.sp, color = Color(0xFF6D4C41))
+                            Text("Welcome ", fontSize = 10.sp, color = Color(0xFF6D4C41))
                             Text(
                                 text = name,
                                 fontSize = 15.sp,
